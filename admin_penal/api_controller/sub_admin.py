@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify,make_response,Flask
 from marshmallow import ValidationError
 from admin_penal.api_functions.models.sub_adminmodel  import User
-from admin_penal.api_functions.schemas.sub_adminschema import UserSchema
+from admin_penal.api_functions.schemas.sub_adminschema import UserSchema,UpdateSchema
 from admin_penal.api_functions.functions.sub_adminfunct import password_conditions,generate_token,is_subadmin,generate_otp,send_otp_email,check_role,generate_reset_token,send_activation_email
 # from admin_penal.api_functions.functions.admin_func import is_authenticated
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -22,7 +22,7 @@ CORS(user_bp)
 # Create a super admin (for setup purposes)
 
 #user registration routes>>>>>>>>>>>>>>>>>>
-@user_bp.route('/user/register', methods=['POST'])
+@user_bp.route('/super_admin/user/register', methods=['POST'])
 def register():
     response_data = {
         'success': False,  # Default to False
@@ -304,7 +304,7 @@ def get_all():
 
 
 #delete users>>>>>>>>>>>>>>>>>>>>
-@user_bp.route('/user/delete_user/<user_id>', methods=['DELETE'])
+@user_bp.route('/super_admin/user/delete_user/<user_id>', methods=['DELETE'])
 def delete_user(user_id):
     try:
         # Convert user_id to ObjectId
@@ -329,4 +329,24 @@ def delete_user(user_id):
             'message': f'An error occurred: {str(e)}',
             'success': False
         }), 500
+
+
+@user_bp.route('/super_admin/user/update/<user_id>', methods=['PUT'])
+def update_user(user_id):
+    data = request.get_json()
+    schema = UpdateSchema(partial=True)  # Allow partial updates
+
+    try:
+        valid_data = schema.load(data, partial=True)
+    except ValidationError as err:
+        return jsonify({'message': 'Invalid input data', 'errors': err.messages, 'success': False,'status':400}), 400
+
+    # Update user in the database
+    # Assuming you have a method to find and update user
+    result = sub_admins.update_one({'_id': ObjectId(user_id)}, {'$set': valid_data})
+
+    if result.matched_count:
+        return jsonify({'message': 'User updated successfully', 'success': True,'status':200}), 200
+    else:
+        return jsonify({'message': 'User not found', 'success': False,'status':404}), 404
 

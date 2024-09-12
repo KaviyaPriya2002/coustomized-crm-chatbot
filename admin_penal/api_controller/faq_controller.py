@@ -1,79 +1,89 @@
 from flask import Blueprint, request, jsonify
-from admin_penal.api_functions.models.faq_model import FAQ
 from marshmallow import ValidationError
+from admin_penal.api_functions.models.faq_model import FAQ
 from admin_penal.api_functions.schemas.faq_schema import FAQSchema
-from admin_penal.db_config import faq_questions
 from admin_penal.api_functions.functions.admin_func import is_authenticated
+from flask_cors import CORS
+
+from admin_penal.db_config import faq_questions
 
 faq_bp = Blueprint('faq_bp', __name__)
-faq_service = FAQ()
+CORS(faq_bp)
 
-
-@faq_bp.route('/add-faq', methods=['POST'])
+@faq_bp.route('/super_admin/add-faq', methods=['POST'])
 @is_authenticated('super-admin')
 def add_faq(admin):
     try:
-        data = request.get_json()
-        faq_schema = FAQSchema(many=True)  # Specify many=True for multiple FAQ objects
-        faq_data = faq_schema.load(data)  # Load and validate multiple FAQs
-        faqs = faq_service.create_faqs(faq_data)  # Process the array of FAQs
+        data = request.get_json()  # This will now handle a single FAQ entry
+        faq_schema = FAQSchema()  # Handle single FAQ
+        faq_data = faq_schema.load(data)  # Validate the single FAQ entry
 
-        return jsonify({"message": "FAQs added successfully", "faqs": faqs}), 200
+        # Create and save the FAQ using the dynamic FAQ model
+        faq_service = FAQ()
+        faq_id = faq_service.create_faq(faq_data)
+
+        return jsonify({"message": "FAQ added successfully", "faq_id": faq_id, "success": True, "status code": 200}), 200
     except ValidationError as err:
-        return jsonify({"errors": err.messages}), 400
+        return jsonify({"errors": err.messages, "success": False, "status code": 400}), 400
 
-
-@faq_bp.route('/get-faqs', methods=['GET'])
-def get_all():
-    # Fetch the document containing all FAQs
-    faq_document = faq_service.get_faq_document()
-    print("faq_document",faq_document)
-
-    # Extract the 'faqs' array from the document
-    if faq_document and 'faqs' in faq_document:
-        faqs = faq_document['faqs']
-    else:
-        faqs = []
-
-    # Convert ObjectId to string for serialization
-    for faq in faqs:
-        faq['id'] = str(faq['id'])
-
-    # Prepare the response data
-    response_data = {
-        'success': True,
-        'total_faqs': len(faqs),  # Total number of FAQs
-        'faq_list': faqs
-    }
-
-    print("response_data", response_data)
-    return jsonify(response_data)
-
-
-@faq_bp.route('/faqs/<string:faq_id>', methods=['GET'])
-def get_faq_by_id(faq_id):
-    faq = faq_service.get_faq_by_id(faq_id)
-    if faq:
-        return jsonify(faq), 200
-    else:
-        return jsonify({"message": "FAQ not found"}), 404
-
-@faq_bp.route('/edit-faqs/<int:faq_id>', methods=['PUT'])
-def update_faq(faq_id):
+@faq_bp.route('/super_admin/update-faq/<faq_id>', methods=['PUT'])
+@is_authenticated('super-admin')
+def update_faq(admin, faq_id):
     try:
         data = request.get_json()
-        faq_schema = FAQSchema(partial=True)
-        validated_data = faq_schema.load(data)
-        if faq_service.update_faq(faq_id, validated_data):
-            return jsonify({"message": "FAQ updated successfully"}), 200
-        else:
-            return jsonify({"message": "FAQ not found"}), 404
-    except ValidationError as err:
-        return jsonify({"errors": err.messages}), 400
+        faq_schema = FAQSchema(partial=True)  # Allow partial updates (only provided fields)
+        update_data = faq_schema.load(data)
+        print("upsater >>>>>>",update_data)
 
-@faq_bp.route('/delete-faqs/<int:faq_id>', methods=['DELETE'])
-def delete_faq(faq_id):
-    if faq_service.delete_faq(faq_id):
-        return jsonify({"message": "FAQ deleted successfully"}), 200
+        faq_service = FAQ()
+        modified_count = faq_service.update_faq(faq_id, update_data)
+        print("mofigied<<<<<<<<<<<<<<",modified_count)
+
+        if modified_count > 0:
+
+            return jsonify({"message": "FAQ updated successfully", "success": True, "status code": 200}), 200
+        else:
+            return jsonify({"message": "FAQ not found or no changes made", "success": False, "status code": 404}), 404
+    except ValidationError as err:
+        return jsonify({"errors": err.messages, "success": False, "status code": 400}), 400
+@faq_bp.route('/super_admin/delete-faq/<faq_id>', methods=['DELETE'])
+@is_authenticated('super-admin')
+def delete_faq(admin, faq_id):
+    faq_service = FAQ()
+    deleted_count = faq_service.delete_faq(faq_id)
+
+    if deleted_count > 0:
+        return jsonify({"message": "FAQ deleted successfully", "success": True, "status code": 200}), 200
     else:
-        return jsonify({"message": "FAQ not found"}), 404
+        return jsonify({"message": "FAQ not found", "success": False, "status code": 404}), 404
+@faq_bp.route('/super_admin/get-all-faqs', methods=['GET'])
+@is_authenticated('super-admin')
+def get_all_faqs(admin):
+    faq_service = FAQ()
+    faqs = faq_service.get_all_faqs()
+
+    return jsonify({"faqs": faqs, "success": True, "status code": 200}), 200
+
+@faq_bp.route('/super_admin/get-faq/<faq_id>', methods=['GET'])
+@is_authenticated('super-admin')
+def get_faq(admin, faq_id):
+    faq_service = FAQ()
+    faq = faq_service.get_faq_by_id(faq_id)
+
+    if faq:
+        return jsonify({"faq": faq, "success": True, "status code": 200}), 200
+    else:
+        return jsonify({"message": "FAQ not found", "success": False, "status code": 404}), 404
+
+
+# @faq_bp.route('/super_admin/delete-faq/<faq_id>', methods=['DELETE'])
+# @is_authenticated('super-admin')
+# def delete_faq_by_id(admin, faq_id):  # Rename the function here
+#     faq_service = FAQ()
+#     deleted_count = faq_service.delete_faq(faq_id)
+#
+#     if deleted_count > 0:
+#         return jsonify({"message": "FAQ deleted successfully", "success": True, "status code": 200}), 200
+#     else:
+#         return jsonify({"message": "FAQ not found", "success": False, "status code": 404}), 404
+

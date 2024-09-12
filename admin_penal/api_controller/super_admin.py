@@ -17,7 +17,7 @@ CORS(admin_bp)
 #     if request.method == 'OPTIONS':
 #         return jsonify({'message': 'Method Not Allowed'}), 405
 
-@admin_bp.route('/super_admin/register', methods=['POST'])
+@admin_bp.route('/register', methods=['POST'])
 def register():
     response_data = {
         'success': False,  # Default to False
@@ -68,11 +68,12 @@ def register():
             'success': True,
             'message': 'Admin registered successfully',
             'admin': str(admin_data),
-            "user_id":str(admin_id)
+            "user_id":str(admin_id),
+            'status':200
         })
     ), 200
     return response
-@admin_bp.route('/super_admin/login', methods=['POST'])
+@admin_bp.route('/login', methods=['POST'])
 @check_role('super-admin')
 def login(user):
     data = request.get_json()
@@ -178,7 +179,7 @@ def login(user):
 #             'message': 'Given password or email does not match',
 #             'success': False
 #         }), 401
-@admin_bp.route('/super_admin/profile')
+@admin_bp.route('/profile')
 @is_authenticated('super-admin')
 def protected_route(user):
     # Add the 'user' parameter
@@ -188,8 +189,9 @@ def protected_route(user):
         'email': user.get('email'),
         'phone_number': user.get('phone_number'),
 
+
     }
-    return jsonify({'message': 'Welcome, authenticated super admin!', 'user_info': admin_info,'success':True})
+    return jsonify({'message': 'Welcome, authenticated super admin!', 'user_info': admin_info,'success':True,'status':200})
 
 @admin_bp.route('/super_admin/forgot-password', methods=['POST'])
 def request_reset():
@@ -319,7 +321,7 @@ def verify_otp():
 #
 #     return jsonify({'success': True, 'message': 'OTP verified successfully'}), 200
 
-@admin_bp.route('/super_admin/resetPassword/<reset_token>', methods=["POST"])
+@admin_bp.route('/resetPassword/<reset_token>', methods=["POST"])
 def reset(reset_token):
     data = request.get_json()
     new_password = data.get('new_password')

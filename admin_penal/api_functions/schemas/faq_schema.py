@@ -6,6 +6,4 @@ class FAQSchema(Schema):
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
 
-# Schema for a single FAQ and a list of FAQs
-faq_schema = FAQSchema()
-faqs_schema = FAQSchema(many=True)
+

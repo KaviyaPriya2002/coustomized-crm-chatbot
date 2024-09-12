@@ -22,9 +22,9 @@ app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
 mail = Mail(app)
 
-app.register_blueprint(admin_bp)
+app.register_blueprint(admin_bp,url_prefix='/super_admin')
 app.register_blueprint(user_bp)
-app.register_blueprint(contact_bp)
+app.register_blueprint(contact_bp,url_prefix='/super_admin')
 app.register_blueprint(faq_bp)
 # app.register_blueprint(createchat_bp)
 app.register_blueprint(chatbot_bp)

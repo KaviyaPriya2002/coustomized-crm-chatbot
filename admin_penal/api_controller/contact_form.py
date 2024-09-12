@@ -22,7 +22,8 @@ def contact_details():
     except ValidationError as err:
         response_data.update({
             'message': 'Invalid input data',
-            'errors': err.messages
+            'errors': err.messages,
+            'status':400
         })
         return jsonify(response_data), 400
 
@@ -108,3 +109,17 @@ def get_lead(lead_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@contact_bp.route('/delete_leads/<string:lead_id>', methods=['DELETE'])
+def delete_lead(lead_id):
+    try:
+        # Attempt to delete the lead by the provided ObjectId
+        result = contact_form.delete_one({"_id": ObjectId(lead_id)})
+
+        if result.deleted_count > 0:
+            return jsonify({"message": "Lead deleted successfully", "success": True}), 200
+        else:
+            return jsonify({"message": "Lead not found", "success": False}), 404
+    except Exception as e:
+        return jsonify({"error": str(e), "success": False}), 500

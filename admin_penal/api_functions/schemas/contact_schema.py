@@ -5,3 +5,4 @@ class ContactForm(Schema):
     phone_number = fields.String(required=True,validate=validate_phone_number)
     email = fields.Email(required=True)
     message = fields.String(required=True)
+    created_at = fields.DateTime(dump_only=True)
