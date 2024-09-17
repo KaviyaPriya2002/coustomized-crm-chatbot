@@ -10,23 +10,27 @@ from admin_penal.db_config import faq_questions
 faq_bp = Blueprint('faq_bp', __name__)
 CORS(faq_bp)
 
-@faq_bp.route('/super_admin/add-faq', methods=['POST'])
+@faq_bp.route('/add-faq', methods=['POST'])
 @is_authenticated('super-admin')
 def add_faq(admin):
     try:
-        data = request.get_json()  # This will now handle a single FAQ entry
+        data = request.get_json()
+        print("data////////....",data)
+        # This will now handle a single FAQ entry
         faq_schema = FAQSchema()  # Handle single FAQ
         faq_data = faq_schema.load(data)  # Validate the single FAQ entry
 
         # Create and save the FAQ using the dynamic FAQ model
         faq_service = FAQ()
         faq_id = faq_service.create_faq(faq_data)
+        faq_response_data = faq_schema.dump(faq_data)
+        print("admin-data>>>>", faq_response_data)
 
-        return jsonify({"message": "FAQ added successfully", "faq_id": faq_id, "success": True, "status code": 200}), 200
+        return jsonify({"message": "FAQ added successfully", "faq_id": faq_id, "success": True, "status code": 200,"FAQ data":faq_response_data}), 200
     except ValidationError as err:
         return jsonify({"errors": err.messages, "success": False, "status code": 400}), 400
 
-@faq_bp.route('/super_admin/update-faq/<faq_id>', methods=['PUT'])
+@faq_bp.route('/update-faq/<faq_id>', methods=['PUT'])
 @is_authenticated('super-admin')
 def update_faq(admin, faq_id):
     try:
@@ -46,7 +50,7 @@ def update_faq(admin, faq_id):
             return jsonify({"message": "FAQ not found or no changes made", "success": False, "status code": 404}), 404
     except ValidationError as err:
         return jsonify({"errors": err.messages, "success": False, "status code": 400}), 400
-@faq_bp.route('/super_admin/delete-faq/<faq_id>', methods=['DELETE'])
+@faq_bp.route('/delete-faq/<faq_id>', methods=['DELETE'])
 @is_authenticated('super-admin')
 def delete_faq(admin, faq_id):
     faq_service = FAQ()
@@ -64,7 +68,7 @@ def get_all_faqs(admin):
 
     return jsonify({"faqs": faqs, "success": True, "status code": 200}), 200
 
-@faq_bp.route('/super_admin/get-faq/<faq_id>', methods=['GET'])
+@faq_bp.route('/get-faq/<faq_id>', methods=['GET'])
 @is_authenticated('super-admin')
 def get_faq(admin, faq_id):
     faq_service = FAQ()

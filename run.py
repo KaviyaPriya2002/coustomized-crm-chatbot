@@ -4,6 +4,8 @@ from admin_penal.api_controller.faq_controller import faq_bp
 # from admin_penal.api_controller.create_bot import createchat_bp
 from admin_penal.api_controller.chatbot import chatbot_bp
 from admin_penal.api_controller.contact_form import contact_bp
+from user.api_controller.chatbot import bot_bp
+from user.api_controller.chatbot_flow import flow_bp
 from flask import Flask
 from flask_mail import Mail
 import os
@@ -25,8 +27,12 @@ mail = Mail(app)
 app.register_blueprint(admin_bp,url_prefix='/super_admin')
 app.register_blueprint(user_bp)
 app.register_blueprint(contact_bp,url_prefix='/super_admin')
-app.register_blueprint(faq_bp)
+app.register_blueprint(faq_bp,url_prefix='/super_admin')
+app.register_blueprint(flow_bp,url_prefix='/user')
 # app.register_blueprint(createchat_bp)
 app.register_blueprint(chatbot_bp)
+app.register_blueprint(bot_bp,url_prefix='/user')
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

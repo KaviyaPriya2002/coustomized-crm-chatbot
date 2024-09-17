@@ -10,6 +10,10 @@ from datetime import datetime, timedelta
 from bson import ObjectId
 from flask import jsonify
 from flask_cors import CORS
+from admin_penal.api_functions.functions.sub_adminfunct import generate_access_token
+import jwt
+
+
 user_bp = Blueprint('user_bp', __name__)
 CORS(user_bp)
 # app.config['SECRET_KEY'] = 'your_secret_key'
@@ -183,7 +187,7 @@ def verify_otp():
 
 
 #user profile >>>>>>>>>>>>>>>>>>>>>>>>>>>
-@user_bp.route('/user/profile',methods=['POST'])
+@user_bp.route('/user/profile',methods=['GET'])
 @is_subadmin('user')
 def protected_route(user):
     # Add the 'user' parameter
@@ -195,6 +199,43 @@ def protected_route(user):
 
     }
     return jsonify({'message': 'Welcome, authenticated super user!', 'user_info': user_info,'success':True})
+
+
+@user_bp.route('/user/refresh-token', methods=['POST'])
+def refresh_token():
+    data = request.get_json()
+    refresh_token = data.get('refreshToken')
+
+    try:
+        # Decode the refresh token
+        decoded = jwt.decode(refresh_token, 'NGi7Yovl6k1GZ1ZL90UCg4jaxE9RrkVr', algorithms=['HS256'])
+        user_id = decoded['user_id']
+
+        # Verify if refresh token matches the one stored in DB
+        user_data = sub_admins.find_one({'_id': ObjectId(user_id)})
+        print("user_data>>>>>>>>>>>>>>",user_data)
+        if user_data and user_data.get('token') == refresh_token:
+            # Generate a new access token
+            new_access_token = generate_access_token(user_id)
+            print("new_access_token>>>>>>>>>>>>>>>>>>>>>>",new_access_token)
+            data = sub_admins.update_one(
+                {'_id': ObjectId(user_id)},
+                {'$set': {'token': new_access_token}}
+            )
+            print("data", data)
+            return jsonify({
+                'access_token': new_access_token,
+                'message': 'Access token refreshed successfully',
+                'success': True
+            }), 200
+        else:
+            return jsonify({'message': 'Invalid refresh token', 'success': False}), 401
+
+    except jwt.ExpiredSignatureError:
+        return jsonify({'message': 'Refresh token expired', 'success': False}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'message': 'Invalid refresh token', 'success': False}), 401
+
 
 #resend otp routes>>>>>>>>>>>>>>>>>>>>
 @user_bp.route('/user/resend-otp', methods=['POST'])

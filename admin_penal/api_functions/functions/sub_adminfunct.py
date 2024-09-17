@@ -11,6 +11,16 @@ from flask_mail import Mail,Message
 import string
 import random
 from werkzeug.security import  check_password_hash
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
+# Use the secret key from the environment
+SECRET_KEY = os.getenv('SECRET_KEY')
+print(SECRET_KEY)
+
 
 mail = Mail()
 
@@ -30,9 +40,18 @@ def password_conditions(password):
 
 def generate_token(user_id):
     expiration_time = datetime.utcnow() + timedelta(hours=1)
-    token = jwt.encode({'user_id': str(user_id), 'exp': expiration_time}, 'NGi7Yovl6k1GZ1ZL90UCg4jaxE9RrkVr',
+    token = jwt.encode({'user_id': str(user_id), 'exp': expiration_time}, SECRET_KEY,
                        algorithm='HS256')
     return token
+
+
+def generate_access_token(user_id):
+    payload = {
+        'user_id': str(user_id),
+        'exp': datetime.utcnow() + timedelta(minutes=15),  # Access token expires in 15 minutes
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm='HS256')
+
 
 def is_subadmin(required_role):
     def decorator(func):
