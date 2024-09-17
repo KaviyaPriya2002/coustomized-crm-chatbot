@@ -10,8 +10,8 @@ bot_bp = Blueprint('bot_bp', __name__)
 CORS(bot_bp)
 
 @bot_bp.route('/add-chatbot', methods=['POST'])
-@is_subadmin('user')
-def add_chatbot(user):
+# @is_subadmin('user')
+def add_chatbot():
     try:
         data = request.get_json()
         print("data////////....",data)

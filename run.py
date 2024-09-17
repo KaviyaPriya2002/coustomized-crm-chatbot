@@ -6,6 +6,7 @@ from admin_penal.api_controller.chatbot import chatbot_bp
 from admin_penal.api_controller.contact_form import contact_bp
 from user.api_controller.chatbot import bot_bp
 from user.api_controller.chatbot_flow import flow_bp
+from user.api_controller.intents import intent_bp
 from flask import Flask
 from flask_mail import Mail
 import os
@@ -31,6 +32,7 @@ app.register_blueprint(faq_bp,url_prefix='/super_admin')
 app.register_blueprint(flow_bp,url_prefix='/user')
 # app.register_blueprint(createchat_bp)
 app.register_blueprint(chatbot_bp)
+app.register_blueprint(intent_bp)
 app.register_blueprint(bot_bp,url_prefix='/user')
 
 
