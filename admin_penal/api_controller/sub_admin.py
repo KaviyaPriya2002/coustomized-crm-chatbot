@@ -26,7 +26,7 @@ CORS(user_bp)
 # Create a super admin (for setup purposes)
 
 #user registration routes>>>>>>>>>>>>>>>>>>
-@user_bp.route('/super_admin/user/register', methods=['POST'])
+@user_bp.route('/user/register', methods=['POST'])
 def register():
     response_data = {
         'success': False,  # Default to False
@@ -37,10 +37,13 @@ def register():
     try:
         valid_data = schema.load(data)
     except ValidationError as err:
-        response_data.update({
-            'message': 'Invalid input data',
-            'errors': err.messages
-        })
+        # Extract a specific error message (for the first encountered error)
+        first_error_message = next(iter(err.messages.values()), 'Invalid input data')
+
+        response_data = {
+            'success': False,
+            'message': first_error_message[0]
+        }
         return jsonify(response_data), 400
 
     username = valid_data.get('username')
@@ -134,7 +137,8 @@ def login(user_lo):
     else:
         return jsonify({
             'message': 'Given password or email does not match',
-            'success': False
+            'success': False,
+            'status':401
         }), 401
 #verify otp routs>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 @user_bp.route('/user/verify-otp', methods=['POST'])
@@ -285,7 +289,7 @@ def request_reset():
     return jsonify({'message': 'Activation email sent successfully','success':True})
 
 #reset password>>>>>>>>>>>>>>>
-@user_bp.route('/user/resetPassword/<reset_token>', methods=["POST"])
+@user_bp.route('/user/reset-password/<reset_token>', methods=["POST"])
 def reset(reset_token):
     data = request.get_json()
     new_password = data.get('new_password')

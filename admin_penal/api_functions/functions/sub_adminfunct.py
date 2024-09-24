@@ -19,7 +19,7 @@ load_dotenv()
 
 # Use the secret key from the environment
 SECRET_KEY = os.getenv('SECRET_KEY')
-print(SECRET_KEY)
+# print(SECRET_KEY)
 
 
 mail = Mail()
@@ -111,18 +111,18 @@ def check_role(required_role):
             password = data.get('password')
 
             if not email or not password:
-                return jsonify({'error': 'Email and password are required','success':False}), 400
+                return jsonify({'message': 'Email and password are required','success':False}), 400
 
             # Lookup user in MongoDB
             user = sub_admins.find_one({'email': email})
             if user is None or not check_password_hash(user['password'], password):
-                return jsonify({'error': 'Invalid credentials','success':False}), 401
+                return jsonify({'message': 'Invalid credentials','success':False}), 401
 
             user_role = user.get('role')
             print("user-role:", user_role)
 
             if user_role != required_role:
-                return jsonify({'error': 'Access denied: Unauthorized role','success':False}), 403
+                return jsonify({'message': 'Access denied: Unauthorized role','success':False}), 403
 
             # Pass user data to the decorated function
             return f(user, *args, **kwargs)
@@ -148,7 +148,7 @@ def send_otp_email(email, otp):
 
 
 def generate_otp():
-    otp = ''.join(random.choices(string.digits, k=6))
+    otp = ''.join(random.choices(string.digits, k=4))
     expiration_time = datetime.utcnow() + timedelta(minutes=5)
     print("expiration_time||||||||||||||||||||||||||||||",expiration_time)
     return otp, expiration_time
@@ -157,7 +157,7 @@ def generate_reset_token():
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(30))
 def send_activation_email(email, reset_token):
     # mail = current_app.extensions['mail']
-    reset_link = f'http://192.168.1.12:5789/user/resetPassword/{reset_token}'
+    reset_link = f'http://localhost:3000/reset-password/{reset_token}'
     msg = Message('Reset Your Password', sender='sayathra123@gmail.com', recipients=[email])
     msg.body = f'Click the following link to reset your password: {reset_link}'
     mail.send(msg)

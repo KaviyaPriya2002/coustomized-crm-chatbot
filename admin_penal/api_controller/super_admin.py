@@ -193,7 +193,7 @@ def protected_route(user):
     }
     return jsonify({'message': 'Welcome, authenticated super admin!', 'user_info': admin_info,'success':True,'status':200})
 
-@admin_bp.route('/super_admin/forgot-password', methods=['POST'])
+@admin_bp.route('/forgot-password', methods=['POST'])
 def request_reset():
     data = request.get_json()
     email = data.get('email')
@@ -215,7 +215,7 @@ def request_reset():
 
     return jsonify({'message': 'Activation email sent successfully','success':True})
 
-@admin_bp.route('/super_admin/resend-otp', methods=['POST'])
+@admin_bp.route('/resend-otp', methods=['POST'])
 def resend_otp():
     data = request.get_json()
     email = data.get('email')
@@ -237,7 +237,7 @@ def resend_otp():
     send_otp_email(email, otp)
 
     return jsonify({'message': f'OTP sent {email} successfully','success':True}), 200
-@admin_bp.route('/super_admin/verify-otp', methods=['POST'])
+@admin_bp.route('/verify-otp', methods=['POST'])
 def verify_otp():
     data = request.get_json()
     email = data.get('email')
